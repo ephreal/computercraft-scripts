@@ -6,12 +6,15 @@
 MZ = {}
 MZ.__index = MZ
 
+-- Returns a new module zipper
 function MZ.new()
     local self = {}
     setmetatable(self, MZ)
     return self
 end
 
+-- Lists the files and dirs at a path
+-- returns the files and dirs to the caller
 function MZ:listDir(path)
     local files = {}
     local dirs = {}
@@ -26,6 +29,9 @@ function MZ:listDir(path)
     return files, dirs
 end
 
+-- Compiles a module into a single file for transfer
+-- The compiled data is stored in a table which must be
+-- serialized prior to sending over the network.
 function MZ:compile(modulePath, removePathPrefix)
     if not removePathPrefix then
         removePathPrefix = ""
@@ -53,6 +59,10 @@ function MZ:compile(modulePath, removePathPrefix)
     return data
 end
 
+-- Extracts a module and handles all necessarry steps to
+-- save it's files within the destination provided.
+-- The data passed in should be a table created by
+-- MZ:compile.
 function MZ:decompile(data, destination)
     if not destination then
         destination = ""
@@ -76,11 +86,15 @@ function MZ:decompile(data, destination)
     end
 end
 
+-- Helper function to handle automatic compilation and
+-- network serialization.
 function MZ:serialise(modulePath, removePathPrefix)
     local data = self:compile(modulePath, removePathPrefix)
     return textutils.serialise(data)
 end
 
+-- Helper function the handle automatic extraction and
+-- network deserialization
 function MZ:deserialise(data, destination)
     local deserialised = textutils.unserialise(data)
     self:decompile(deserialised, destination)
