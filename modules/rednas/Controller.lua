@@ -4,15 +4,15 @@ require("ChunkedFile")
 Controller = {}
 Controller.__index = Controller
 
-function Controller:new()
-    local controller = {}
-    setmetatable(controller, Controller)
+function Controller.new()
+    local self = {}
+    setmetatable(self, Controller)
     
-    controller.disks = {}
-    controller.filenames = {}
-    controller:initDisks()
-    controller:initFiles()
-    return controller
+    self.disks = {}
+    self.filenames = {}
+    self:initDisks()
+    self:initFiles()
+    return self
 end
 
 function Controller:initDisks(amount)

@@ -22,10 +22,10 @@ function Item.new(item, slot, storageDeviceName)
     self.totalAmount = item.count
 
     -- Add a few more fields I want
-    self.shortName = table.concat(strings.split(fullname, ":"), " ", 2)
-    self.displayName = shortname
+    self.shortName = table.concat(strings.split(self.fullname, ":"), " ", 2)
+    self.displayName = self.shortName
     self.slots = {}
-    self:addSlot(peripheralItem, slot, storageDeviceName)
+    self:addSlot(item, slot, storageDeviceName)
 
     return self
 end
@@ -46,12 +46,20 @@ end
 
 -- Transfer some amount of this item between storages
 function Item:transfer(to, amount)
+    if amount <= 0 then
+        return 0
+    end
     local totalTransferred = 0
 
     while totalTransferred < amount do
-        local slot = self:getTransferSlot()
-        local storage = peripheral.wrap(slot.storageDevice)
+        local slot = self:getTransferSlot(to)
         if not slot then
+            return totalTransferred
+        end
+
+        -- Attempt to wrap the slot
+        local storage = peripheral.wrap(slot.storageDevice)
+        if not storage then
             return totalTransferred
         end
 
@@ -74,13 +82,13 @@ end
 
 -- Gets the slot with the least amount of items in it
 -- This way that slot will be emptied first
-function Item:getTransferSlot()
+function Item:getTransferSlot(toStorage)
     if #self.slots < 1 then
         return nil
     end
     local slot = self.slots[1]
     for _,toCheck in ipairs(self.slots) do
-        if toCheck.count < slot.count then
+        if toCheck.count < slot.count and not slot.storageDevice == toStorage then
             slot = toCheck
         end
     end

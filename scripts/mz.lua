@@ -66,10 +66,6 @@ function MZ:decompile(data, destination)
         local dir = file['localDir']
         local dest = fs.combine(destination, dir)
         local filePath = fs.combine(dest, file.name)
-        print(dir)
-        print(dest)
-        print(filePath)
-        print(file.name)
         if not fs.exists(dest) then
             fs.makeDir(dest)
         end
