@@ -1,0 +1,5 @@
+package.path = package.path .. ";" .. "/modules/?/init.lua"
+package.path = package.path .. ";" .. "/modules/rednas/?.lua"
+local Rednas = require("rednas")
+local rednas = Rednas.new()
+rednas:listen()

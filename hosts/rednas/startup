@@ -1,0 +1,9 @@
+--package.path = package.path .. ";" .. "/modules/?/init.lua"
+--package.path = package.path .. ";" .. "/modules/rednas/?.lua"
+
+-- pull any updates prior to beginning
+local bootstrap = require("scripts/bootstrap")
+
+--local rednas = require("modules.rednas")
+--rednas:listen()
+shell.run("/runner")
