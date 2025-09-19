@@ -1,7 +1,10 @@
+-- Bootstrap protocol client
 local Bootstrap = {}
 Bootstrap.__index = Bootstrap
 
 
+-- Returns a new bootstrap client.
+-- Modem side must be specified.
 function Bootstrap.new(modemSide)
     local self = {}
     setmetatable(self, Bootstrap)
@@ -23,7 +26,7 @@ function Bootstrap.new(modemSide)
         fs.makeDir(self.downloadDir)
     end
 
-    -- open rednet and search for the bootstrap server
+    -- Store the bootstrap server id for later use
     rednet.open(modemSide)
     self.serverId = rednet.lookup(self.protocol, self.serverName)
     
@@ -31,9 +34,9 @@ function Bootstrap.new(modemSide)
 end
 
 function Bootstrap:setup()
-    -- queries the bootstrap server to ask
-    -- for any items this device needs
-    -- (identified by os.getDeviceLabel)
+    -- queries the bootstrap server to ask for any items
+    -- this device needs
+    -- self-identifies with os.getDeviceLabel
     rednet.send(
         self.serverId,
         textutils.serialise(
@@ -44,10 +47,13 @@ function Bootstrap:setup()
         ),
         self.protocol
     )
+
     -- Wait for the bootstrap server to reply
     local sender,manifest = rednet.receive(self.protocol, self.timeout)
     
     if sender then
+        -- I'd like to compare the manifests and only
+        -- donwload changes. That isn't implemented yet
         self:backupManifest()
         local file = fs.open(self.manifestPath, "w")
         file.write(manifest)
@@ -58,6 +64,7 @@ function Bootstrap:setup()
     return false
 end
 
+-- Backs up the manifest if bootstrap has been ran before
 function Bootstrap:backupManifest()
     if fs.exists(self.manifestPath) then
         if fs.exists(self.manifestPath .. ".bak") then
@@ -67,6 +74,7 @@ function Bootstrap:backupManifest()
     end
 end
 
+-- Downloads a single file from the bootstrap server
 function Bootstrap:download(filename, savePath, serverPath)
     rednet.send(self.serverId,
         textutils.serialise({filepath=serverPath, op="download"}),
@@ -90,15 +98,21 @@ end
 
 function Bootstrap:downloadModule(modpath, installPath)
     -- MZ must have been downloaded and installed
+    -- load it in manually since require doesn't seem to
+    -- like being ran here.
     local f = fs.open("/scripts/mz.lua", "r")
     local MZ = load(f.readAll())()
     f.close()
     local mz = MZ.new()
+
+    -- Request the module
     rednet.send(self.serverId,
         textutils.serialise({modpath=modpath, op="moduleDownload"}),
         self.protocol
     )
     local server,module = rednet.receive(self.protocol, self.timeout)
+
+    -- Extract the module using mz
     if module then
         local success, message = pcall(function() mz:deserialise(module, installPath) end)
         if not success then
@@ -130,8 +144,9 @@ function Bootstrap:compareManifests(old, new)
     return diff
 end
 
+-- see above. Not uesd yet.
 function Bootstrap:compareManifestEntries(old, new)
-    local categories = {"protocols", "files", "modules"}
+    local categories = {"files", "modules"}
     local diff = {}
     for _,category in ipairs(categories) do
         local oldCategory = old[category]
@@ -142,6 +157,9 @@ function Bootstrap:compareManifestEntries(old, new)
     return diff
 end
 
+
+-- Reads the manifest at self.manifestPath and returns a
+-- table to the caller.
 function Bootstrap:readManifest()
     if not fs.exists(self.manifestPath) then
         return {}
@@ -153,6 +171,7 @@ function Bootstrap:readManifest()
     return textutils.unserialise(manifest)
 end
 
+-- Downloads the files and modules in the manifest
 function Bootstrap:downloadFromManifest(manifest)
     -- Download standalone files first. These will
     -- include the default files required for everything
