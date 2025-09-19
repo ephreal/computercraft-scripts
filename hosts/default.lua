@@ -1,6 +1,5 @@
 {
     manifestVersion = 1,
-    protocols = {},
     files = {
         {
             filename="bootstrap.lua",
