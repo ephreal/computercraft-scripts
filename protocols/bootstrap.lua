@@ -67,8 +67,10 @@ function Protocol:sendManifest(recipient, label)
 end
 
 function Protocol:extendTable(toExtend, newData)
-    for _,value in ipairs(newData) do
-        table.insert(toExtend, value)
+    if newData then
+        for _,value in ipairs(newData) do
+            table.insert(toExtend, value)
+        end
     end
     return toExtend
 end
