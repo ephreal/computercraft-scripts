@@ -1,0 +1,6 @@
+package.path = package.path .. ";" .. "/modules/?/init.lua"
+package.path = package.path .. ";" .. "/modules/LUNA/?.lua"
+package.path = package.path .. ";" .. "/modules/basalt.lua"
+shell.run("/scripts/ensureBasalt.lua")
+
+local LUNA = require("LUNA")

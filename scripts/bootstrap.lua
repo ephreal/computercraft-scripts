@@ -100,7 +100,12 @@ function Bootstrap:downloadModule(modpath, installPath)
     -- MZ must have been downloaded and installed
     -- load it in manually since require doesn't seem to
     -- like being ran here.
-    local f = fs.open("/scripts/mz.lua", "r")
+    local f, error = fs.open("/scripts/mz.lua", "r")
+    if not f then
+        -- an error occured. Print it for debugging
+        print(error)
+        return
+    end
     local MZ = load(f.readAll())()
     f.close()
     local mz = MZ.new()
