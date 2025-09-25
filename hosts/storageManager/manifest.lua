@@ -12,6 +12,11 @@
             modname="storageManager",
             modpath="/modules/storageManager",
             installDir="/modules"
+        },
+        {
+            modname="occultismManager",
+            modpath="/modules/occultismManager",
+            installDir="/modules"
         }
     },
 }
