@@ -1,0 +1,3 @@
+{
+    AzureDiamond="hunter2"
+}
