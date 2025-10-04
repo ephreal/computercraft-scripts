@@ -87,4 +87,21 @@ function authClient:refresh(token)
     return response.token
 end
 
+function authClient:getGroups(token)
+    local msg = {
+        type="groups",
+        token=token
+    }
+    rednet.send(self.serverId, msg, self.protocol)
+    local id, response = rednet.receive(self.protocol, self.timeout)
+
+    if not response then
+        return nil, "No response from auth server"
+    elseif not response.ok then
+        return nil, response.error or "An unknown error occurred"
+    end
+
+    return response.groups
+end
+
 return authClient

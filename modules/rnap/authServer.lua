@@ -98,7 +98,11 @@ function authServer:cleanupTokens()
 end
 
 function authServer:validateCredentials(username, password)
-    local pass = self.users[username]
+    local user = self.users[username]
+    if not user then
+        return false
+    end
+    local pass = user.password
     -- Note: This is an *intentional* security vulnerability
     --       for my friends to discover and exploit in game.
     -- If you don't want to have it in, then comment this line out
@@ -132,7 +136,6 @@ end
 function authServer:checkAuth(ccId, msg)
     -- Ensure that old tokens are cleaned up
     self:cleanupTokens()
-    self:saveTokens()
     local token = self.tokens[msg.token]
     local protocol = self.config.protocolName or DEFAULT_PROTOCOL
 
@@ -190,6 +193,26 @@ function authServer:refresh(ccId, msg)
         expires = os.epoch("utc") + tokenLifetime,
         id = ccId
     }
+    rednet.send(ccId, {ok=true, token=token}, protocol)
+end
+
+function authServer:getGroups(ccId, msg)
+    local protocol = self.config.protocolName
+
+    if not msg.token then
+        rednet.send(ccId, {ok=false, error="No auth token"}, protocol)
+        return
+    end
+
+    local token = self.tokens[msg.token]
+    if not token then
+        rednet.send(ccId, {ok=false, error="Invalid auth token"}, protocol)
+        return
+    end
+
+    local user = self.users[token.user]
+
+    rednet.send(ccId, {ok=true, groups=user.groups}, protocol)
 end
 
 function authServer:run()
@@ -224,6 +247,8 @@ function authServer:run()
                 self:checkAuth(id, msg)
             elseif msg.type == "refresh" then
                 self:refresh(id, msg)
+            elseif msg.type == "groups" then
+                self:getGroups(id, msg)
             end
         end
     end
